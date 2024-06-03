@@ -2362,12 +2362,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e58a8494f35e17f45ba5bbffdfb92517, type: 3}
---- !u!195 &5075534488604402036 stripped
-NavMeshAgent:
-  m_CorrespondingSourceObject: {fileID: 3540391287371809819, guid: abeb186619cc7e6419cb81e1e4dfa162,
-    type: 3}
-  m_PrefabInstance: {fileID: 6136966654407605910}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &5642716984738007026 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5642716984738007026, guid: 3d8158841df6b824eb4a665f82a99938,
@@ -2728,12 +2722,12 @@ PrefabInstance:
         type: 3}
       propertyPath: dynamicObservers.Array.data[0]
       value: 
-      objectReference: {fileID: 5075534488604402036}
+      objectReference: {fileID: 0}
     - target: {fileID: 5642716984738007026, guid: 3d8158841df6b824eb4a665f82a99938,
         type: 3}
       propertyPath: dynamicObservers.Array.data[1]
       value: 
-      objectReference: {fileID: 5075534488604402036}
+      objectReference: {fileID: 0}
     - target: {fileID: 5642716984738007026, guid: 3d8158841df6b824eb4a665f82a99938,
         type: 3}
       propertyPath: dynamicObservers.Array.data[2]
