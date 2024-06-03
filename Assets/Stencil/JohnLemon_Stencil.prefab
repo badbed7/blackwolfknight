@@ -1525,12 +1525,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: abeb186619cc7e6419cb81e1e4dfa162, type: 3}
---- !u!195 &3642446276886370780 stripped
-NavMeshAgent:
-  m_CorrespondingSourceObject: {fileID: 3540391287371809819, guid: abeb186619cc7e6419cb81e1e4dfa162,
-    type: 3}
-  m_PrefabInstance: {fileID: 264989488427490759}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7183346441223956798 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6925745739663848697, guid: abeb186619cc7e6419cb81e1e4dfa162,
@@ -4021,6 +4015,11 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 3674741053269167954, guid: 76083fa640b348844953e3deb13a1a41,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3674741053308076271, guid: 76083fa640b348844953e3deb13a1a41,
         type: 3}
       propertyPath: m_Layer
@@ -5629,16 +5628,6 @@ PrefabInstance:
       propertyPath: dynamicObservers.Array.size
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5642716984738007026, guid: 3d8158841df6b824eb4a665f82a99938,
-        type: 3}
-      propertyPath: dynamicObservers.Array.data[0]
-      value: 
-      objectReference: {fileID: 3642446276886370780}
-    - target: {fileID: 5642716984738007026, guid: 3d8158841df6b824eb4a665f82a99938,
-        type: 3}
-      propertyPath: dynamicObservers.Array.data[1]
-      value: 
-      objectReference: {fileID: 3642446276886370780}
     - target: {fileID: 5642716984738007026, guid: 3d8158841df6b824eb4a665f82a99938,
         type: 3}
       propertyPath: dynamicObservers.Array.data[2]
