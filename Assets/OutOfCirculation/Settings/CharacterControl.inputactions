@@ -600,6 +600,17 @@
                 },
                 {
                     "name": "",
+                    "id": "f2109cf5-1fb6-4f10-9855-2a14cfacac25",
+                    "path": "<Touchscreen>/primaryTouch/tap",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Touchscreen",
+                    "action": "Click",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "bb68c735-c723-4ac8-a85a-71e3dc653d47",
                     "path": "<Mouse>/scroll",
                     "interactions": "",
@@ -746,6 +757,11 @@
                     "isOR": false
                 }
             ]
+        },
+        {
+            "name": "Touchscreen",
+            "bindingGroup": "Touchscreen",
+            "devices": []
         }
     ]
 }

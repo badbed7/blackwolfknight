@@ -60,14 +60,14 @@ public class NavMeshAgentController : MonoBehaviour
     {
         NavMeshAgent = GetComponent<NavMeshAgent>();
         Cam = Camera.main;
-        MouseRayLayerMask = LayerMask.GetMask("Default", "Character", "CharacterOutline", "InteractiveObject", "InteractiveOutlined");
+        MouseRayLayerMask = LayerMask.GetMask("Floor", "Character", "CharacterOutline", "InteractiveObject", "InteractiveOutlined");
     }
 
     void Awake()
     {
         // Init the first scene it is created into.
         SceneInit();
-        
+
         // Then register to be init at each scene load.
         SceneManager.sceneLoaded += (scene, mode) =>
         {
@@ -80,12 +80,12 @@ public class NavMeshAgentController : MonoBehaviour
         // Cache and enable input.
         InputActionAsset inputReference = ControlManager.CurrentInput;
         inputReference.Enable();
-        
+
         m_MouseClick = inputReference.FindAction("Gameplay/Pointer Interact");
         m_MoveAction = inputReference.FindAction("Gameplay/Move");
         m_InteractAction = inputReference.FindAction("Gameplay/Interact");
         m_MoveAction = inputReference.FindAction("Gameplay/Move");
-        
+
         m_MouseClick.Enable();
         m_MoveAction.Enable();
         m_InteractAction.Enable();
@@ -96,7 +96,7 @@ public class NavMeshAgentController : MonoBehaviour
         m_MinCosineOfPathAngleError = Mathf.Cos(MaxPathAngleError * Mathf.Deg2Rad);
         m_Transform = transform;
         m_PathBuffer = new NavMeshPath();
-        
+
         // Rotation will be updated manually and so should be disabled on the Nav Mesh Agent.
         NavMeshAgent.updateRotation = false;
 
@@ -115,19 +115,34 @@ public class NavMeshAgentController : MonoBehaviour
 
     void Update()
     {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+
+            if (touch.phase == UnityEngine.TouchPhase.Began || touch.phase == UnityEngine.TouchPhase.Moved)
+            {
+                Ray ray = Cam.ScreenPointToRay(touch.position);
+                RaycastHit hit;
+
+                if (Physics.Raycast(ray, out hit))
+                {
+                    NavMeshAgent.SetDestination(hit.point);
+                }
+            }
+        }
         // Cache whether or not there is a current destination to avoid repeated null checks.
         bool hasDestinationInteractiveObject = m_DestinationInteractiveObject != null;
-        
+
         // If there is a desired interactive object but axis input isn't being used or the character is not headed to the interactive object then disable its highlight.
-        if(m_DesiredInteractiveObject != null && !m_AxisInputHeadedToInteractable)
+        if (m_DesiredInteractiveObject != null && !m_AxisInputHeadedToInteractable)
             m_DesiredInteractiveObject.Highlight(false);
 
         // Call the appropriate input control method.
-        bool axisInput = ControlManager.CurrentControlType == ControlManager.ControlType.Gamepad || ControlManager.CurrentControlType == ControlManager.ControlType.Keyboard; 
-        if (ControlManager.CurrentControlType == ControlManager.ControlType.Mouse)
-            MouseInputControl(ref hasDestinationInteractiveObject);
-        else if (axisInput)
-            AxisInputControl(ref hasDestinationInteractiveObject);
+        bool axisInput = ControlManager.CurrentControlType == ControlManager.ControlType.Gamepad || ControlManager.CurrentControlType == ControlManager.ControlType.Keyboard;
+        //if (ControlManager.CurrentControlType == ControlManager.ControlType.Mouse)
+        //MouseInputControl(ref hasDestinationInteractiveObject);
+        //else if (axisInput)
+        AxisInputControl(ref hasDestinationInteractiveObject);
 
         // If the character is headed to an interactive object, has not yet interacted and is within a short distance...
         if (hasDestinationInteractiveObject && !m_HasInteracted && !NavMeshAgent.pathPending && NavMeshAgent.remainingDistance <= TeleportToInteractableObjectDistance)
@@ -135,7 +150,7 @@ public class NavMeshAgentController : MonoBehaviour
             // ... teleport the character to the interaction location...
             m_Transform.position = m_DestinationInteractiveObject.interactionLocation.position;
             m_Transform.rotation = m_DestinationInteractiveObject.interactionLocation.rotation;
-            
+
             // ... and interact with the object. Also clear cached variables for this object.
             m_DestinationInteractiveObject.Interact(this);
             m_DestinationInteractiveObject = null;
@@ -146,7 +161,7 @@ public class NavMeshAgentController : MonoBehaviour
         Vector3 velocity = NavMeshAgent.velocity;
         Quaternion currentRotation = m_Transform.rotation;
         Quaternion desiredRotation = currentRotation;
-        
+
         // If the character is moving then the desired rotation is in the direction they are moving.
         if (velocity.sqrMagnitude > k_SqrMinLookSpeed)
         {
@@ -162,10 +177,10 @@ public class NavMeshAgentController : MonoBehaviour
         float maxAngleChange = OrientationInterpolationSpeed * Time.deltaTime;
         float desiredAngleChange = Quaternion.Angle(currentRotation, desiredRotation);
         float actualAngleChange = Mathf.Min(maxAngleChange, desiredAngleChange);
-        
+
         // Record the angular speed.
         AngularSpeed = actualAngleChange / Time.deltaTime;
-        
+
         // Set the new rotation.
         m_Transform.rotation = Quaternion.RotateTowards(currentRotation, desiredRotation, maxAngleChange);
     }
@@ -176,23 +191,23 @@ public class NavMeshAgentController : MonoBehaviour
     void MouseInputControl(ref bool hasDestinationInteractiveObject)
     {
         // If the player has already clicked on an interactive object it will be blocking navigation input and so nothing more should be done.
-        if(hasDestinationInteractiveObject && m_DestinationInteractiveObject.IsBlockingNavigationInput())
+        if (hasDestinationInteractiveObject && m_DestinationInteractiveObject.IsBlockingNavigationInput())
             return;
 
         // Cache input data.
         bool mouseClicked = m_MouseClick.ReadValue<float>() > InputSystem.settings.defaultButtonPressPoint;
         Vector2 mousePosition = Mouse.current.position.ReadValue();
-        
+
         // If the pointer isn't currently over a gameobject nothing else needs to be done.
         EventSystem current = EventSystem.current;
-        if(current != null && EventSystem.current.IsPointerOverGameObject())
+        if (current != null && EventSystem.current.IsPointerOverGameObject())
             return;
-        
+
         // Cast a ray into the scene.
         Ray ray = Cam.ScreenPointToRay(mousePosition);
         Physics.Raycast(ray, out RaycastHit hit, k_RaycastDistance, MouseRayLayerMask.value,
             QueryTriggerInteraction.Collide);
-            
+
         // Find the index of the interactable under the pointer. This will be -1 if there is none.        
         int interactableObjectIndex = FindDesiredInteractableIndexForMouseInput(hit);
 
@@ -201,11 +216,11 @@ public class NavMeshAgentController : MonoBehaviour
         {
             // ... disable the move indicator...
             m_MoveIndicator.SetActive(false);
-            
+
             // ... disable the highlight of the existing desired interactive object...
-            if(m_DesiredInteractiveObject != null)
+            if (m_DesiredInteractiveObject != null)
                 m_DesiredInteractiveObject.Highlight(false);
-            
+
             // ... and enable the highlight on the new desired interactive object. 
             m_DesiredInteractiveObject = m_AllInteractiveObjects[interactableObjectIndex];
             m_DesiredInteractiveObject.Highlight(true);
@@ -229,7 +244,7 @@ public class NavMeshAgentController : MonoBehaviour
             {
                 m_MoveIndicator.SetActive(false);
             }
-            
+
             // If the mouse is clicked set the character's destination.
             if (mouseClicked)
                 SetNonInteractionDestinationForMouseInput(out hasDestinationInteractiveObject, hit);
@@ -284,17 +299,17 @@ public class NavMeshAgentController : MonoBehaviour
     void AxisInputControl(ref bool hasDestinationInteractiveObject)
     {
         // If the player is already input to interact with an interactive object then it will be blocking input and nothing else should be done.
-        if(hasDestinationInteractiveObject && m_DestinationInteractiveObject.IsBlockingNavigationInput())
+        if (hasDestinationInteractiveObject && m_DestinationInteractiveObject.IsBlockingNavigationInput())
             return;
 
         // Cache input data.
-        Vector2 moveInput = m_MoveAction.ReadValue<Vector2>(); 
+        Vector2 moveInput = m_MoveAction.ReadValue<Vector2>();
         bool hasAxisInput = moveInput.sqrMagnitude > float.Epsilon;
         bool hasInteractInput = m_InteractAction.ReadValue<float>() > InputSystem.settings.defaultButtonPressPoint;
-        
+
         // Cache player position.
         Vector3 playerPosition = m_Transform.position;
-        
+
         // Convert input as axes to a vector in world space.
         m_InputInWorldSpace = CalculateInputInWorldSpace(moveInput);
 
@@ -309,9 +324,9 @@ public class NavMeshAgentController : MonoBehaviour
         if (interactableObjectIndex != -1)
         {
             // ... disable the highlight on the existing desired interactive object...
-            if(m_DesiredInteractiveObject != null)
+            if (m_DesiredInteractiveObject != null)
                 m_DesiredInteractiveObject.Highlight(false);
-            
+
             // ... and enable it on the new desired interactive object.
             m_DesiredInteractiveObject = m_AllInteractiveObjects[interactableObjectIndex];
             m_DesiredInteractiveObject.Highlight(true);
@@ -324,7 +339,7 @@ public class NavMeshAgentController : MonoBehaviour
                 SetNonInteractionDestinationForAxisInput(out hasDestinationInteractiveObject, playerPosition, m_InputInWorldSpace);
         }
         // If there was no interactive object found but there is axis input then set a destination on the nav mesh.
-        else if(hasAxisInput)
+        else if (hasAxisInput)
         {
             SetNonInteractionDestinationForAxisInput(out hasDestinationInteractiveObject, playerPosition, m_InputInWorldSpace);
         }
@@ -354,7 +369,7 @@ public class NavMeshAgentController : MonoBehaviour
             NavMeshAgent.SetDestination(m_DestinationInteractiveObject.interactionLocation.position);
             m_AxisInputHeadedToInteractable = true;
         }
-        
+
         m_HasInteracted = false;
     }
 
@@ -364,7 +379,7 @@ public class NavMeshAgentController : MonoBehaviour
     void SetNonInteractionDestinationForAxisInput(out bool hasDestinationInteractiveObject, Vector3 playerPosition, Vector3 inputInWorldSpace)
     {
         hasDestinationInteractiveObject = false;
-        
+
         // The destination is a small distance from the player in the direction of the input.
         Vector3 destination = playerPosition + inputInWorldSpace * AxisInputDestinationDistance;
 
@@ -381,7 +396,7 @@ public class NavMeshAgentController : MonoBehaviour
                 // ... the check the angle between the start of the path and the input's direction.
                 Vector3 pathStart = m_PathCornersBuffer[1] - m_PathCornersBuffer[0];
                 float cosine = Vector3.Dot(inputInWorldSpace, pathStart.normalized);
-                
+
                 // If that angle is too large (cosine is too small)...
                 if (cosine < m_MinCosineOfPathAngleError)
                 {
@@ -404,7 +419,7 @@ public class NavMeshAgentController : MonoBehaviour
             if (hit.hit)
                 NavMeshAgent.SetDestination(hit.position);
         }
-        
+
         m_HasInteracted = false;
     }
 
@@ -420,12 +435,12 @@ public class NavMeshAgentController : MonoBehaviour
         Vector3 inputInLocalSpace = new Vector3(input.x, 0f, input.y);
 
         Vector3 inputInWorldSpace = Quaternion.LookRotation(flatCameraForward) * inputInLocalSpace;
-        
-        if(inputInWorldSpace.sqrMagnitude > float.Epsilon)
+
+        if (inputInWorldSpace.sqrMagnitude > float.Epsilon)
             inputInWorldSpace.Normalize();
         else
             inputInWorldSpace = Vector3.zero;
-        
+
         return inputInWorldSpace;
     }
 
@@ -441,7 +456,7 @@ public class NavMeshAgentController : MonoBehaviour
         float facingBasedGreatestComparable = 0f;
         int facingBasedInteractableObjectIndex = -1;
         float facingBasedDistanceToSelectedInteractable = float.PositiveInfinity;
-        
+
         distanceToSelectedInteractable = float.PositiveInfinity;
 
         Vector3 characterForward = m_Transform.forward;
@@ -450,14 +465,14 @@ public class NavMeshAgentController : MonoBehaviour
         for (int i = 0; i < m_AllInteractiveObjects.Length; i++)
         {
             // If the interactive object is no enabled, skip it.
-            if(!m_AllInteractiveObjects[i].gameObject.activeInHierarchy || !m_AllInteractiveObjects[i].enabled)
+            if (!m_AllInteractiveObjects[i].gameObject.activeInHierarchy || !m_AllInteractiveObjects[i].enabled)
                 continue;
-            
+
             // Cache information about the character's position relative to the interactive object.
             Vector3 characterToInteractiveObject = m_AllInteractiveObjects[i].FlatPosition - playerPosition;
             float distanceToInteractable = characterToInteractiveObject.magnitude;
             float inverseDistance = 1f / distanceToInteractable;
-            
+
             // Find the cosine of the angle between the input in world space and the vector between the player and interactive object.
             float cosineAngle = Vector3.Dot(characterToInteractiveObject, inputInWorldSpace) * inverseDistance;
 
