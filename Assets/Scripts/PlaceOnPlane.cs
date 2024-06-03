@@ -11,6 +11,11 @@ public class PlaceOnPlane : PressInputBase
     /// <summary>
     /// The prefab that will be instantiated on touch.
     /// </summary>
+    /// 
+    [SerializeField]
+    [Tooltip("Instantiates this prefab on a plane at the touch location.")]
+    GameObject RectPrefab;
+
     [SerializeField]
     [Tooltip("Instantiates this prefab on a plane at the touch location.")]
     GameObject placedPrefab;
@@ -30,7 +35,7 @@ public class PlaceOnPlane : PressInputBase
 
     ARRaycastManager aRRaycastManager;
     List<ARRaycastHit> hits = new List<ARRaycastHit>();
-
+ 
 
 
     protected override void Awake()
@@ -49,31 +54,36 @@ public class PlaceOnPlane : PressInputBase
     void Update()
     {
 
-        if (Pointer.current == null || isPressed == false)
-            return;
+        Vector3 screenCenter = new Vector3(Screen.width / 2, Screen.height / 2);
+        Ray ray = Camera.main.ScreenPointToRay(screenCenter);
 
-        // Store the current touch position.
-        var touchPosition = Pointer.current.position.ReadValue();
-
-        // Check if the raycast hit any trackables.
-        if (aRRaycastManager.Raycast(touchPosition, hits, TrackableType.PlaneWithinPolygon))
+        // Check if the raycast hit any trackables
+        if (aRRaycastManager.Raycast(ray, hits, TrackableType.PlaneWithinPolygon))
         {
-            // Raycast hits are sorted by distance, so the first hit means the closest.
             var hitPose = hits[0].pose;
 
-            // Check if there is already spawned object. If there is none, instantiated the prefab.
-            if (spawnedObject == null)
-            {
-                spawnedObject = Instantiate(placedPrefab, hitPose.position, placedPrefab.transform.rotation);
-                
-
-            }
-            
+            // Set RectPrefab's position to the hit position
+            RectPrefab.SetActive(true);
+            RectPrefab.transform.position = hitPose.position;
         }
-       
+
+        if (spawnedObject != null)
+        {
+            RectPrefab.SetActive(false);
+        }
+
+    }
+    public void spawnLevel()
+    {
+        if (spawnedObject == null)
+        {
+            spawnedObject = Instantiate(placedPrefab, RectPrefab.transform.position, placedPrefab.transform.rotation);
+            //RectPrefab.SetActive(false);
+
+        }
     }
 
-    protected override void OnPress(Vector3 position) => isPressed = true;
+   // protected override void OnPress(Vector3 position) => isPressed = true;
 
-    protected override void OnPressCancel() => isPressed = false;
+  //  protected override void OnPressCancel() => isPressed = false;
 }
